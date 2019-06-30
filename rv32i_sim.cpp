@@ -42,6 +42,8 @@ void instDecExec(unsigned int instWord)
 	funct3 = (instWord >> 12) & 0x00000007;
 	rs1 = (instWord >> 15) & 0x0000001F;
 	rs2 = (instWord >> 20) & 0x0000001F;
+	funct7 = (instWord >> 25) & 0x0000007F;
+
 
 	// — inst[31] — inst[30:25] inst[24:21] inst[20]
 	I_imm = ((instWord >> 20) & 0x7FF) | (((instWord >> 31) ? 0xFFFFF800 : 0x0));
@@ -180,7 +182,7 @@ void instDecExec(unsigned int instWord)
 			break;
 
 		case 5:                    //// back to it later to be sure of that shamt thing and that it doesn't affect the value of func7
-			if (func7 == 32)
+			if (funct7 == 32)
 			{
 				cout << "\tSRAI\tx" << rd << ", x" << rs1 << ", x" << rs2 << "\n";
 				regs[rd] = regs[rs1] >> (int)I_imm;   // 
