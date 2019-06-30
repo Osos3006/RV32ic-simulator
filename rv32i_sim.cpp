@@ -62,7 +62,7 @@ void instDecExec(unsigned int instWord)
 	B_imm = sprintf(str, "%d%d", B_imm, temp5);
 	B_imm = sprintf(str, "%d%d", B_imm, temp6);
 
-	U_imm = ((instWord >> 12) & 7FFFF);
+	U_imm = ((instWord >> 12) & 0x7FFFF);
 
 	printPrefix(instPC, instWord);
 
