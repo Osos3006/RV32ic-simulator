@@ -64,7 +64,7 @@ void instDecExec(unsigned int instWord)
 	B_imm = sprintf(str, "%d%d", B_imm, temp5);
 	B_imm = sprintf(str, "%d%d", B_imm, temp6);
 
-	U_imm = ((instWord >> 12) & 0x7FFFF);
+	U_imm = ((instWord >> 12) & 0x7FFF);
 
 	printPrefix(instPC, instWord);
 
@@ -82,7 +82,7 @@ void instDecExec(unsigned int instWord)
 				}
 		case 1:
 
-			cout << "\tSLL\tx" << rd << ", x" << rs1 << ", x" << rs2 << "\n";
+			cout << "\tSLL\tx" << rd << ", x" << rs1 << ", x" << rs2   << "\n";
 			regs[rd] = regs[rs1] << regs[rs2];
 			break;
 
