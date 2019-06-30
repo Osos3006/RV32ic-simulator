@@ -308,22 +308,25 @@ void instDecExec(unsigned int instWord)
 
 
 
-
-	else if (opcode == 0x63) /// couldn't find the opcodes of the U formats, so ask about this too
+// LUI places the 20-bit U-immediate into bits 31–12 of register rd and places zero in the lowest 12 bits. The 32-bit result is sign-extended to 64 bits.
+	else if (opcode == 0x37) 
 	{
-		switch (funct3)
-		{
 
-		case 0:
-			cout << "\tLUI\tx" << rd << hex << "0x" << (int)U_imm;
-			regs[rd] = (int)U_imm;
-			regs[rd] = regs[rd] >> 12;
-			break;
-
+		cout << "\tLUI\tx" << rd << hex << "0x" << (int)U_imm;
+		regs[rd] = (int)U_imm;
+		regs[rd] = regs[rd] >> 12;
+	}
+// appends 12 low-order zero bits to the 20-bit U-immediate, sign-extends the result to 64 bits, adds it to the address of the AUIPC instruction, then 
+//places the result in register rd.
 
 
-		case 1:
-		}
+	else if (opcode == 0x17)
+	{
+			cout << "\tAUIPC\tx" << rd << hex << "0x" << (int)U_imm;
+			unsigned int store1 = (int)U_imm;
+			store1 = store1 >> 12;
+			regs[rd] = store1+pc;
+		
 	}
 
 
