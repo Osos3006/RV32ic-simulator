@@ -214,14 +214,14 @@ void instDecExec(unsigned int instWord)
 		switch (funct3) {
 		case 0:
 			cout << "\tLB\tx" << rd << ", " << hex << "0x" << (int)I_imm << ", (x" << rs1 << ")" << "\n";
-			regs[rd] = ((memory[regs[rs1] + (int)I_imm])) & 0x0000ff;                     // ask about it  also it should be sign extended but i don't know how now
+			regs[rd] = ((memory[regs[rs1] + (int)I_imm])) & 0x000000ff;                     // ask about it  also it should be sign extended but i don't know how now
 			break;
 
 
 		case 1:
 			// LH loads a 16-bit value from memory, then sign-extends to 32-bits before storing in rd
 			cout << "\tLH\tx" << rd << ", " << hex << "0x" << (int)I_imm << ", (x" << rs1 << ")" << "\n";
-			regs[rd] = ((memory[regs[rs1] + (int)I_imm])) & 0x00ffff;                     // ask about it
+			regs[rd] = ((memory[regs[rs1] + (int)I_imm])) & 0x0000ffff;                     // ask about it
 			break;
 
 		case 2:
@@ -231,12 +231,12 @@ void instDecExec(unsigned int instWord)
 
 		case 4:
 			cout << "\tLBU\tx" << rd << ", " << hex << "0x" << (int)I_imm << ", (x" << rs1 << ")" << "\n";
-			regs[rd] = (unsigned char)((memory[regs[rs1] + (int)I_imm])) & 0x0000ff;                     // ask about it
+			regs[rd] = (unsigned char)((memory[regs[rs1] + (int)I_imm])) & 0x000000ff;                     // ask about it
 			break;
 
 		case 5:
 			cout << "\tLHU\tx" << rd << ", " << hex << "0x" << (int)I_imm << ", (x" << rs1 << ")" << "\n";
-			regs[rd] = (unsigned char)((memory[regs[rs1] + (int)I_imm])) & 0x00ffff;                     // ask about it
+			regs[rd] = (unsigned char)((memory[regs[rs1] + (int)I_imm])) & 0x0000ffff;                     // ask about it
 			break;
 		}
 	}
