@@ -362,7 +362,38 @@ void instDecExec(unsigned int instWord)
 	
 
 
+	else if (opcode == 0x73)      // ecall
+	{
+		cout << "ECALL ";
+		switch (regs[17])
+		{
+		case 1:
+			cout << regs[10];
+			break;
+		case 4:
+			while (memory[regs[10]] != '/0')
+			{
+				cout << memory[regs[10]];
+				regs[10]++;
+			}
+			break;
 
+		case 5:
+			cin >> regs[10];
+			break;
+
+		case 8:
+			cin >> regs[11];
+			int i = 0;
+			while (i <= regs[11])
+			{
+				i++;
+				cin >> memory[regs[10]];
+			}
+
+
+		}
+	}
 
 	else
 	{
