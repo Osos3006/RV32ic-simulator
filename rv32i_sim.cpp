@@ -60,11 +60,23 @@ void instDecExec(unsigned int instWord)
 	unsigned int temp5 = ((instWord >> 7) & 0x1);
 	unsigned int temp6 = ((instWord >> 30) & 0x1);
 	char str2[100];
-	B_imm = sprintf(str, "%d%d", temp3, temp4);
-	B_imm = sprintf(str, "%d%d", B_imm, temp5);
-	B_imm = sprintf(str, "%d%d", B_imm, temp6);
+	B_imm = sprintf(str2, "%d%d", temp3, temp4);
+	B_imm = sprintf(str2, "%d%d", B_imm, temp5);
+	B_imm = sprintf(str2, "%d%d", B_imm, temp6);
+	B_imm = strtol(str2, NULL, 10);
 
 	U_imm = ((instWord >> 12) & 0x7FFF);
+
+	temp3 = ((instWord >> 21) & 0x3FF);
+	temp4 = ((instWord >> 20) & 0x1);
+	temp5 = ((instWord >> 12) & 0xFF);
+	temp6 = ((instWord >> 31) & 0x1);
+	char str3[100];
+	J_imm = sprintf(str3, "%d%d", temp3, temp4);
+	J_imm = sprintf(str3, "%d%d", B_imm, temp5);
+	J_imm = sprintf(str3, "%d%d", B_imm, temp6);
+	J_imm = strtol(str3, NULL, 10);
+
 
 	printPrefix(instPC, instWord);
 
@@ -250,19 +262,20 @@ void instDecExec(unsigned int instWord)
 			//The SW, SH, and SB instructions store 32-bit, 16-bit, and 8-bit values from the low bits of register rs2 to memory.
 
 			cout << "\tSB\tx" << rs2 << ", " << hex << "0x" << (int)S_imm << ", (x" << rs1 << ")" << "\n";
-			// some instruction
+			memory[regs[rs1] + (int)S_imm] = regs[rs2] & 0x000000FF;
 			break;
 
 
 		case 1:
 			cout << "\tSH\tx" << rs2 << ", " << hex << "0x" << (int)S_imm << ", (x" << rs1 << ")" << "\n";
+			memory[regs[rs1] + (int)S_imm] = regs[rs2] & 0x0000FFFF;
 			// some instruction
 			break;
 
 
 		case 2:
 			cout << "\tSW\tx" << rs2 << ", " << hex << "0x" << (int)S_imm << ", (x" << rs1 << ")" << "\n";
-			(memory[regs[rs2] + (int)S_imm]) = regs[rs1];
+			(memory[regs[rs1] + (int)S_imm]) = regs[rs2];
 			break;
 
 		}
@@ -274,32 +287,32 @@ void instDecExec(unsigned int instWord)
 		case 0:
 			cout << "\tBEQ\tx" << rs1 << ", x" << rs2 << hex << "0x" << (int)B_imm; // ask how to reach the word that should replace B-immediate
 			if (regs[rs1] == regs[rs2])
-				pc = pc + (int)B_imm;
+				pc = pc + (int)B_imm * 2;
 			break;
 		case 1:
 			cout << "\tBNE\tx" << rs1 << ", x" << rs2 << hex << "0x" << (int)B_imm;
 			if (regs[rs1] != regs[rs2])
-				pc = pc + (int)B_imm;
+				pc = pc + (int)B_imm * 2;
 			break;
 		case 4:
 			cout << "\tBLT\tx" << rs1 << ", x" << rs2 << hex << "0x" << (int)B_imm;
 			if (regs[rs1] < regs[rs2])
-				pc = pc + (int)B_imm;
+				pc = pc + (int)B_imm * 2;
 			break;
 		case 5:
 			cout << "\tBGE\tx" << rs1 << ", x" << rs2 << hex << "0x" << (int)B_imm;
 			if (regs[rs1] >= regs[rs2])
-				pc = pc + (int)B_imm;
+				pc = pc + (int)B_imm * 2;
 			break;
 		case 6:
 			cout << "\tBLTU\tx" << rs1 << ", x" << rs2 << hex << "0x" << (int)B_imm;
 			if (unsigned int(regs[rs1]) < unsigned int(regs[rs2]))
-				pc = pc + (int)B_imm;
+				pc = pc + (int)B_imm * 2;
 			break;
 		case 7:
 			cout << "\tBGEU\tx" << rs1 << ", x" << rs2 << hex << "0x" << (int)B_imm;
 			if (unsigned int(regs[rs1]) >= unsigned int(regs[rs2]))
-				pc = pc + (int)B_imm;
+				pc = pc + (int)B_imm * 2;
 			break;
 
 		}
@@ -328,6 +341,25 @@ void instDecExec(unsigned int instWord)
 			regs[rd] = store1+pc;
 		
 	}
+	else 
+		if (opcode == 0x6F)
+		// J instructions
+	// JAL instruction:
+		{
+		cout << "\tJAL\tx" << rd << hex << "0x" << (int)J_imm;
+		pc = pc + (int)J_imm * 2;
+
+		}
+	else 
+			if (opcode == 0x67)
+				//JALR instruction and it uses I-immediate
+			{
+				cout << "\tJALR\tx" << rd << ", x" << rs1 << ", " << hex << "0x" << (int)I_imm << "\n";
+				regs[rd] = pc + 4;
+				pc = regs[rs1] + int(I_imm);
+			}
+
+	
 
 
 
