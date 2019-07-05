@@ -14,7 +14,8 @@ References:
 #include <iomanip>
 #include <string>
 using namespace std;
-
+bool compressed;
+bool flag = true;
 int regs[32] = { 0 };
 unsigned int pc = 0x0;
 
@@ -31,7 +32,7 @@ void printPrefix(unsigned int instA, unsigned int instW) {
 }
 void instDecExec(unsigned int instWord)
 {
-	unsigned int rd, rs1, rs2, funct3, funct7, opcode;
+	unsigned int rd, rs1, rs2, funct3, funct7, opcode;                                     
 	unsigned int I_imm, S_imm, B_imm, U_imm, J_imm;
 	unsigned int address;
 
@@ -371,10 +372,11 @@ void instDecExec(unsigned int instWord)
 			cout << regs[10];
 			break;
 		case 4:
-			while (memory[regs[10]] != '/0')
+			int t = regs[10]; 
+			while (memory[t] != '/0')
 			{
-				cout << memory[regs[10]];
-				regs[10]++;
+				cout << memory[t];
+				t++;
 			}
 			break;
 
@@ -390,8 +392,10 @@ void instDecExec(unsigned int instWord)
 				i++;
 				cin >> memory[regs[10]];
 			}
-
-
+			break;
+		case 10:
+			cout << "Program terminated";
+			
 		}
 	}
 
@@ -407,6 +411,8 @@ int main(int argc, char *argv[]) {
 	unsigned int instWord = 0;
 	ifstream inFile;
 	ofstream outFile;
+	unsigned int firstbytes=0;
+
 
 	if (argc<1) emitError("use: rv32i_sim <machine_code_file_name>\n");
 
@@ -418,22 +424,49 @@ int main(int argc, char *argv[]) {
 
 		inFile.seekg(0, inFile.beg);
 		if (!inFile.read((char *)memory, fsize)) emitError("Cannot read from input file\n");
+		else
+		{
 
-		while (true) {
-			instWord = (unsigned char)memory[pc] |
-				(((unsigned char)memory[pc + 1]) << 8) |
-				(((unsigned char)memory[pc + 2]) << 16) |
-				(((unsigned char)memory[pc + 3]) << 24);
-			pc += 4;
-			// remove the following line once you have a complete simulator
-			if (pc == 32) break;			// stop when PC reached address 32
-			instDecExec(instWord);
+			while (flag)
+			{
+				instWord = (unsigned char)memory[pc] |
+					(((unsigned char)memory[pc + 1]) << 8);
+				firstbytes = instWord & 0x0003;
+				if (firstbytes == 11)
+				{
+					instWord = instWord | (((unsigned char)memory[pc + 2]) << 16) |
+						(((unsigned char)memory[pc + 3]) << 24);
+					instDecExec(instWord);
+					pc = pc + 4;
+					
+				}
+				else
+				{
+					instDecExec(instWord);
+					pc = pc + 2;
+					compressed = true;
+					
+				}
+
+
+			}
+
+			//while (flag) {
+			//	instWord = (unsigned char)memory[pc] |
+			//		(((unsigned char)memory[pc + 1]) << 8) |
+			//		(((unsigned char)memory[pc + 2]) << 16) |
+			//		(((unsigned char)memory[pc + 3]) << 24);
+			//	pc += 4;
+			//	 remove the following line once you have a complete simulator
+			//	if (pc == 32) break;			// stop when PC reached address 32
+			//	instDecExec(instWord);
+			//}
+
+			// dump the registers
+			for (int i = 0; i < 32; i++)
+				cout << "x" << dec << i << ": \t" << "0x" << hex << std::setfill('0') << std::setw(8) << regs[i] << "\n";
 		}
-
-		// dump the registers
-		for (int i = 0; i<32; i++)
-			cout << "x" << dec << i << ": \t" << "0x" << hex << std::setfill('0') << std::setw(8) << regs[i] << "\n";
-
 	}
-	else emitError("Cannot access input file\n");
+	else
+		emitError("Cannot access input file\n");
 }
