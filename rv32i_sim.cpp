@@ -19,9 +19,9 @@ bool flag = true;
 int regs[32] = { 0 };
 unsigned int pc = 0x0;
 
-char memory[8 * 1024];	// only 8KB of memory located at address 0
+char memory[8 * 1024]; // only 8KB of memory located at address 0
 
-void emitError(char*s)
+void emitError(char* s)
 {
 	cout << s;
 	exit(0);
@@ -32,8 +32,9 @@ void printPrefix(unsigned int instA, unsigned int instW) {
 }
 void instDecExec(unsigned int instWord)
 {
-
-	unsigned int rd, rs1, rs2, funct3, funct7, opcode;                                     
+	for (int i = 0; i < 32; i++)
+		regs[i] = 0;
+	unsigned int rd, rs1, rs2, funct3, funct7, opcode;
 	unsigned int I_imm, S_imm, B_imm, U_imm, J_imm;
 	unsigned int address;
 
@@ -55,56 +56,63 @@ void instDecExec(unsigned int instWord)
 	S_imm = (((instWord >> 20) & 0x7E0) | ((instWord >> 7) & 0x1F)) | ((instWord >> 31) ? 0xFFFFF800 : 0x0);
 
 	B_imm = ((instWord >> 7) & 0x1E) | ((instWord >> 20) & 0x7E0) | ((instWord << 4) & 0x800) | ((instWord >> 31) ? 0xFFFFF000 : 0x0);
-	J_imm = ((instWord & 0x7FE00000) >> 20) | ((instWord >> 9) & 0x800) | (instWord & 0xFF0000) | ((instWord >> 31) ? 0xFFF00000 : 0x0);
+	//J_imm = ((instWord >> 20)& 0x7FE) | ((instWord >> 9 )& 0x800)  | (instWord & 0xFF0000)| ((instWord >> 31) ? 0xFFF00000 : 0x0);
+	J_imm = ((instWord & 0x7FE00000) >> 20) | ((instWord >> 20 & 0x1) << 11) | ((instWord >> 12 & 0x7F) << 12) | (((instWord >> 31) ? 0xFFF80000 : 0x0));
+	//concatenated the two immediate fields
+   // unsigned int temp1 = ((instWord >> 25) & 0x3F);
+   // unsigned int temp2 = ((instWord >> 7) & 0xF);
+   // char str[100];
+   // sprintf(str, "%d%d", temp2, temp1);
+   // S_imm = strtol(str, NULL, 10);
 
+   // unsigned int temp3 = ((instWord >> 8) & 0x7);
+   // unsigned int temp4 = ((instWord >> 25) & 0x1F);
+   // unsigned int temp5 = ((instWord >> 7) & 0x1);
+   // unsigned int temp6 = ((instWord >> 30) & 0x1);
+   // char str2[100];
+   // B_imm = sprintf(str2, "%d%d", temp3, temp4);
+   // B_imm = sprintf(str2, "%d%d", B_imm, temp5);
+   // B_imm = sprintf(str2, "%d%d", B_imm, temp6);
+   // B_imm = strtol(str2, NULL, 10);
 
-	 //concatenated the two immediate fields
-	//unsigned int temp1 = ((instWord >> 25) & 0x3F);
-	//unsigned int temp2 = ((instWord >> 7) & 0xF);
-	//char str[100];
-	//sprintf(str, "%d%d", temp2, temp1);
-	//S_imm = strtol(str, NULL, 10);
+   // U_imm = ((instWord >> 12) & 0x7FFF);
 
-	//unsigned int temp3 = ((instWord >> 8) & 0x7);
-	//unsigned int temp4 = ((instWord >> 25) & 0x1F);
-	//unsigned int temp5 = ((instWord >> 7) & 0x1);
-	//unsigned int temp6 = ((instWord >> 30) & 0x1);
-	//char str2[100];
-	//B_imm = sprintf(str2, "%d%d", temp3, temp4);
-	//B_imm = sprintf(str2, "%d%d", B_imm, temp5);
-	//B_imm = sprintf(str2, "%d%d", B_imm, temp6);
-	//B_imm = strtol(str2, NULL, 10);
-
-	//U_imm = ((instWord >> 12) & 0x7FFF);
-
-	//temp3 = ((instWord >> 21) & 0x3FF);
-	//temp4 = ((instWord >> 20) & 0x1);
-	//temp5 = ((instWord >> 12) & 0xFF);
-	//temp6 = ((instWord >> 31) & 0x1);
-	//char str3[100];
-	//J_imm = sprintf(str3, "%d%d", temp3, temp4);
-	//J_imm = sprintf(str3, "%d%d", B_imm, temp5);
-	//J_imm = sprintf(str3, "%d%d", B_imm, temp6);
-	//J_imm = strtol(str3, NULL, 10);
+   // temp3 = ((instWord >> 21) & 0x3FF);
+   // temp4 = ((instWord >> 20) & 0x1);
+   // temp5 = ((instWord >> 12) & 0xFF);
+   // temp6 = ((instWord >> 31) & 0x1);
+   // char str3[100];
+   // J_imm = sprintf(str3, "%d%d", temp3, temp4);
+   // J_imm = sprintf(str3, "%d%d", B_imm, temp5);
+   // J_imm = sprintf(str3, "%d%d", B_imm, temp6);
+   // J_imm = strtol(str3, NULL, 10);
 
 
 	printPrefix(instPC, instWord);
+	if (instWord == 0)
+	{
+		flag = true;
+		return;
+	}
 
 	if (opcode == 0x33) {		// R Instructions
 		switch (funct3) {
-		case 0: if (funct7 == 32)
-		{
-			cout << "\tSUB\tx" << rd << ", x" << rs1 << ", x" << rs2 << "\n";
-			regs[rd] = regs[rs1] - regs[rs2];
-		}
-				else
-				{
-					cout << "\tADD\tx" << rd << ", x" << rs1 << ", x" << rs2 << "\n";
-					regs[rd] = regs[rs1] + regs[rs2];
-				}
+		case 0:
+			if (funct7 == 32)
+			{
+				cout << "\tSUB\tx" << rd << ", x" << rs1 << ", x" << rs2 << "\n";
+				regs[rd] = regs[rs1] - regs[rs2];
+
+			}
+			else
+			{
+				cout << "\tADD\tx" << rd << ", x" << rs1 << ", x" << rs2 << "\n";
+				regs[rd] = regs[rs1] + regs[rs2];
+			}
+			break;
 		case 1:
 
-			cout << "\tSLL\tx" << rd << ", x" << rs1 << ", x" << rs2   << "\n";
+			cout << "\tSLL\tx" << rd << ", x" << rs1 << ", x" << rs2 << "\n";
 			regs[rd] = regs[rs1] << regs[rs2];
 			break;
 
@@ -119,8 +127,8 @@ void instDecExec(unsigned int instWord)
 
 
 		case 3:
-			cout << "\tSLLU\tx" << rd << ", x" << rs1 << ", x" << rs2 << "\n";
-			if ((unsigned int)regs[rs1] < (unsigned int)regs[rs2])
+			cout << "\tSLTU\tx" << rd << ", x" << rs1 << ", x" << rs2 << "\n";
+			if ((unsigned int)(regs[rs1]) < (unsigned int)(regs[rs2]))
 				regs[rd] = 1;
 			else
 				regs[rd] = 0;
@@ -141,7 +149,7 @@ void instDecExec(unsigned int instWord)
 			}
 			else
 			{
-				cout << "\tSRA\tx" << rd << ", x" << rs1 << ", x" << rs2 << "\n";
+				cout << "\tSRL\tx" << rd << ", x" << rs1 << ", x" << rs2 << "\n";
 				regs[rd] = (unsigned int)regs[rs1] >> regs[rs2];
 			}
 
@@ -295,35 +303,37 @@ void instDecExec(unsigned int instWord)
 		switch (funct3)
 		{
 		case 0:
-			cout << "\tBEQ\tx" << rs1 << ", x" << rs2 << hex << "0x" << (int)B_imm; // ask how to reach the word that should replace B-immediate
+			cout << "\tBEQ\tx" << rs1 << ", x" << rs2 << ", " << hex << "0x" << (int)B_imm << "\n";// ask how to reach the word that should replace B-immediate
 			if (regs[rs1] == regs[rs2])
-				pc = pc + (int)B_imm * 2;
+				pc = pc + (int)B_imm - 4;
 			break;
 		case 1:
-			cout << "\tBNE\tx" << rs1 << ", x" << rs2 << hex << "0x" << (int)B_imm;
+			cout << "\tBNE\tx" << rs1 << ", x" << rs2 << ", " << hex << "0x" << (int)B_imm << "\n";
 			if (regs[rs1] != regs[rs2])
-				pc = pc + (int)B_imm * 2;
+				pc = pc + (int)B_imm - 4;
 			break;
 		case 4:
-			cout << "\tBLT\tx" << rs1 << ", x" << rs2 << hex << "0x" << (int)B_imm;
+			cout << "\tBLT\tx" << rs1 << ", x" << rs2 << ", " << hex << "0x" << (int)B_imm << "\n";
 			if (regs[rs1] < regs[rs2])
-				pc = pc + (int)B_imm * 2;
+				pc = pc + (int)B_imm - 4;
 			break;
 		case 5:
-			cout << "\tBGE\tx" << rs1 << ", x" << rs2 << hex << "0x" << (int)B_imm;
+			cout << "\tBGE\tx" << rs1 << ", x" << rs2 << ", " << hex << "0x" << (int)B_imm << "\n";
 			if (regs[rs1] >= regs[rs2])
-				pc = pc + (int)B_imm * 2;
+				pc = pc + (int)B_imm - 4;
 			break;
 		case 6:
-			cout << "\tBLTU\tx" << rs1 << ", x" << rs2 << hex << "0x" << (int)B_imm;
+			cout << "\tBLTU\tx" << rs1 << ", x" << rs2 << ", " << hex << "0x" << (int)B_imm << "\n";
 			if ((unsigned int)(regs[rs1]) < (unsigned int)(regs[rs2]))
-				pc = pc + (int)B_imm * 2;
+				pc = pc + (int)B_imm - 4;
 			break;
 		case 7:
-			cout << "\tBGEU\tx" << rs1 << ", x" << rs2 << hex << "0x" << (int)B_imm;
+			cout << "\tBGEU\tx" << rs1 << ", x" << rs2 << ", " << hex << "0x" << (int)B_imm << "\n";
 			if ((unsigned int)(regs[rs1]) >= (unsigned int)(regs[rs2]))
-				pc = pc + (int)B_imm * 2;
+				pc = pc + (int)B_imm - 4;
 			break;
+		default:
+			cout << " wrong branch instruction or func3 has a wrong number" << '\n';
 
 		}
 	}
@@ -331,36 +341,39 @@ void instDecExec(unsigned int instWord)
 
 
 
-// LUI places the 20-bit U-immediate into bits 31–12 of register rd and places zero in the lowest 12 bits. The 32-bit result is sign-extended to 64 bits.
-	else if (opcode == 0x37) 
+	// LUI places the 20-bit U-immediate into bits 31–12 of register rd and places zero in the lowest 12 bits. The 32-bit result is sign-extended to 64 bits.
+	else if (opcode == 0x37)
 	{
 
 		cout << "\tLUI\tx" << rd << hex << "0x" << (int)U_imm;
 		regs[rd] = (int)U_imm;
 		regs[rd] = regs[rd] >> 12;
 	}
-// appends 12 low-order zero bits to the 20-bit U-immediate, sign-extends the result to 64 bits, adds it to the address of the AUIPC instruction, then 
-//places the result in register rd.
+	// appends 12 low-order zero bits to the 20-bit U-immediate, sign-extends the result to 64 bits, adds it to the address of the AUIPC instruction, then 
+	//places the result in register rd.
 
 
 	else if (opcode == 0x17)
 	{
-			cout << "\tAUIPC\tx" << rd << hex << "0x" << (int)U_imm;
-			unsigned int store1 = (int)U_imm;
-			store1 = store1 >> 12;
-			regs[rd] = store1+pc;
-		
+		cout << "\tAUIPC\tx" << rd << hex << "0x" << (int)U_imm;
+		unsigned int store1 = (int)U_imm;
+		store1 = store1 >> 12;
+		regs[rd] = store1 + pc;
+
 	}
-	else 
+	else
 		if (opcode == 0x6F)
-		// J instructions
-	// JAL instruction:
+			// J instructions
+		// JAL instruction:
 		{
-		cout << "\tJAL\tx" << rd << hex << "0x" << (int)J_imm;
-		pc = pc + (int)J_imm * 2;
+			cout << "\tJAL\tx" << rd << ", " << hex << "0x" << (int)J_imm << '\n';
+			//cout << "\tJAL\tx" << rd << ", " <<J_imm;
+
+			regs[rd] = pc;
+			pc += (int)J_imm - 4;
 
 		}
-	else 
+		else
 			if (opcode == 0x67)
 				//JALR instruction and it uses I-immediate
 			{
@@ -369,58 +382,59 @@ void instDecExec(unsigned int instWord)
 				pc = regs[rs1] + int(I_imm);
 			}
 
-	
 
-			
-	else if (opcode == 0x73)      // ecall
-	{
+
+
+			else if (opcode == 0x73)      // ecall
+			{
 				int t = regs[10];
 				int i = 0;
-		cout << "ECALL ";
-		switch (regs[17])
-		{
-		case 1:
-			cout << regs[10];
-			break;
-		case 4:
-			
-			while (memory[t] != '0')
-			{
-				cout << memory[t];
-				t++;
+				cout << "\tecall\t" << '\n';
+				switch (regs[17])
+				{
+				case 1:
+					cout << regs[10];
+					break;
+				case 4:
+
+					while (memory[t] != '\0')
+					{
+						cout << memory[t];
+						t++;
+					}
+					break;
+
+				case 5:
+					cin >> regs[10];
+					break;
+
+				case 8:
+					cin >> regs[11];
+
+					while (i <= regs[11])
+					{
+						i++;
+						cin >> memory[regs[10]];
+					}
+					break;
+				case 10:
+					cout << "Program terminated";
+					flag = false;
+					return;
+				}
 			}
-			break;
 
-		case 5:
-			cin >> regs[10];
-			break;
-
-		case 8:
-			cin >> regs[11];
-			
-			while (i <= regs[11])
+			else
 			{
-				i++;
-				cin >> memory[regs[10]];
+				cout << "\tUnkown Instruction \n";
 			}
-			break;
-		case 10:
-			cout << "Program terminated";
-			flag = false;
-		}
-	}
-
-	else
-	{
-		cout << "\tUnkown Instruction \n";
-	}
 
 }
 
 int main() {
 	unsigned int instWord = 0;
 	ifstream inFile;
-	inFile.open("div.bin");
+	inFile.open("")
 	ofstream outFile;
 	unsigned int firstbytes = 0;
 
@@ -456,14 +470,14 @@ int main() {
 
 			}*/
 			while (flag) {
-			 instWord = (unsigned char)memory[pc] |
-			  (((unsigned char)memory[pc + 1]) << 8) |
-			  (((unsigned char)memory[pc + 2]) << 16) |
-			  (((unsigned char)memory[pc + 3]) << 24);
-			 pc += 4;
-			  //remove the following line once you have a complete simulator
-			// if (pc == 32) break;   // stop when PC reached address 32
-			 instDecExec(instWord);
+				instWord = (unsigned char)memory[pc] |
+					(((unsigned char)memory[pc + 1]) << 8) |
+					(((unsigned char)memory[pc + 2]) << 16) |
+					(((unsigned char)memory[pc + 3]) << 24);
+				pc += 4;
+				//remove the following line once you have a complete simulator
+			   //if (pc == 32) break;   // stop when PC reached address 32
+				instDecExec(instWord);
 			}
 			// dump the registers
 			for (int i = 0; i < 32; i++)
@@ -472,7 +486,5 @@ int main() {
 	}
 	else
 		emitError((char*)"Cannot access input file\n");
-
-	system("pause");
 }
 
