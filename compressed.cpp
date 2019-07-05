@@ -247,14 +247,14 @@ void instDecExec(unsigned int instWord)
 		// The effective byte address is obtained by adding register rs1 to the sign-extended 12-bit offset. Loads copy a value from memory to register rd
 		switch (funct3) {
 		case 0:
-			cout << "\tLB\tx" <<dec << rd << ", " << hex << "0x" << (int)I_imm << " (x" << dec <<rs1 << ")" << "\n";
+			cout << "\tLB\tx" <<dec << rd << ", " << dec << (int)I_imm << " (x" << dec <<rs1 << ")" << "\n";
 			regs[rd] = ((memory[regs[rs1] + (int)I_imm])) & 0x000000ff;                     // ask about it  also it should be sign extended but i don't know how now
 			break;
 
 
 		case 1:
 			// LH loads a 16-bit value from memory, then sign-extends to 32-bits before storing in rd
-			cout << "\tLH\tx" << dec << rd << ", " << hex << "0x" << (int)I_imm << " (x" << dec << rs1 << ")" << "\n";
+			cout << "\tLH\tx" << dec << rd << ", " << dec << (int)I_imm << " (x" << dec << rs1 << ")" << "\n";
 			regs[rd] = ((memory[regs[rs1] + (int)I_imm])) & 0x0000ffff;                     // ask about it
 			break;
 
@@ -264,12 +264,12 @@ void instDecExec(unsigned int instWord)
 			break;
 
 		case 4:
-			cout << "\tLBU\tx" << dec << rd << ", " << hex << "0x" << (int)I_imm << " (x" << dec <<rs1 << ")" << "\n";
+			cout << "\tLBU\tx" << dec << rd << ", " << dec  << (int)I_imm << " (x" << dec <<rs1 << ")" << "\n";
 			regs[rd] = (unsigned char)((memory[regs[rs1] + (int)I_imm])) & 0x000000ff;                     // ask about it
 			break;
 
 		case 5:
-			cout << "\tLHU\tx" << dec << rd << ", " << hex << "0x" << (int)I_imm << " (x" << dec <<rs1 << ")" << "\n";
+			cout << "\tLHU\tx" << dec << rd << ", " << dec << (int)I_imm << " (x" << dec <<rs1 << ")" << "\n";
 			regs[rd] = (unsigned char)((memory[regs[rs1] + (int)I_imm])) & 0x0000ffff;                     // ask about it
 			break;
 		}
@@ -283,13 +283,13 @@ void instDecExec(unsigned int instWord)
 			// The effective byte address is obtained by adding register rs1 to the sign-extended 12-bit offset.  Stores copy the value in register rs2 to memory.
 			//The SW, SH, and SB instructions store 32-bit, 16-bit, and 8-bit values from the low bits of register rs2 to memory.
 
-			cout << "\tSB\tx" << dec << rs2 << ", " << hex << "0x" << (int)S_imm << " (x" << dec << rs1 << ")" << "\n";
+			cout << "\tSB\tx" << dec << rs2 << ", " << dec << (int)S_imm << " (x" << dec << rs1 << ")" << "\n";
 			memory[regs[rs1] + (int)S_imm] = regs[rs2] & 0x000000FF;
 			break;
 
 
 		case 1:
-			cout << "\tSH\tx" <<dec << rs2 << ", " << hex << "0x" << (int)S_imm << " (x" <<dec << rs1 << ")" << "\n";
+			cout << "\tSH\tx" <<dec << rs2 << ", " << dec << (int)S_imm << " (x" <<dec << rs1 << ")" << "\n";
 			memory[regs[rs1] + (int)S_imm] = regs[rs2] & 0x0000FFFF;
 			// some instruction
 			break;
@@ -459,7 +459,7 @@ else
     //regs[rd] = ((memory[regs[rs1] + (int)I_imm])) & 0x000000ff;                     
     rd = ((instWord >> 2) & 0x0007);
     rs1 = ((instWord >> 7) & 0x0007);
-    cout << "  C.LW  x" << rd << ", " << hex << "0x" << (int)Uimm << "(x" << rs1 << ")" << endl;
+    cout << "  C.LW  x" << dec << rd << ", " << dec << (int)Uimm << "(x" << dec << rs1 << ")" << endl;
     
     regs[rd] = ((memory[regs[rs1] + (int)Uimm]));     // like how it was done in the memory
     break;
@@ -468,7 +468,7 @@ else
    case 6: // store word
     rs2 = ((instWord >> 2) & 0x0007);
     rs1 = ((instWord >> 7) & 0x0007);
-    cout << "  C.SW  x" << rs2 << ", " << hex << "0x" << (int)Uimm << "(x" << rs1 << ")" << endl;
+    cout << "  C.SW  x" <<  dec <<rs2 << ", " << dec << (int)Uimm << "(x" << dec <<rs1 << ")" << endl;
     memory[regs[rs1] + Uimm] = regs[rs2];
     break;
    }
@@ -482,21 +482,21 @@ else
 //C.ADDI adds the non-zero sign-extended 6-bit immediate to the value in register rd then writes the result to rd. C.ADDI expands into addi rd, rd, nzimm[5:0].
    case 0:
     rd = ((instWord >> 7) & 0x001F);
-    cout << "\tADDI\tx" << rd << ", x" << rd << ", " << hex << "0x" << (int)nzimm << "\n";
+    cout << "\tADDI\tx" <<dec << rd << ", x" << dec <<rd << ", " << hex << "0x" << (int)nzimm << "\n";
     regs[rd] = regs[rd] + (int)nzimm;
     break;
 
 //unconditional control transfer, writes the address of the instruction following the jump (pc+2) to the link register, x1. C.JAL expands to jal x1, offset[11:1]
    case 1:
     rd = ((instWord >> 7) & 0x001F);
-    cout << "\tJAL\tx" << rd << hex << "0x" << (int)immQ1<<"\n";
+    cout << "\tJAL\tx" << dec << rd << hex << "0x" << (int)immQ1<<"\n";
     pc = pc + (int)immQ1 * 2;
    // regs[1] = pc;           // ask about it
     break;
 //C.LI loads the sign-extended 6-bit immediate, imm, into register rd. C.LI expands into addi rd, x0, imm[5:0]. C.LI is only valid when rd̸=x0
    case 2:
     rd = ((instWord >> 7) & 0x001F);
-    cout << "\tLI\tx" << rd<<" , " << hex << "0x" << (int)immQ1<<"\n";
+    cout << "\tLI\tx" << dec << rd << " , " << hex << "0x" << (int)immQ1<<"\n";
    // if (rd != 0)
      regs[rd] = immQ1;
     break;
@@ -504,7 +504,7 @@ else
 extends bit 17 into all higher bits of the destination.C.LUI expands into lui rd, nzimm[17:12].*/
    case 3:
     rd = ((instWord >> 7) & 0x001F);
-    cout << "\tLUI\tx" << rd <<" , "<< hex << "0x" << (int)nzimm;
+    cout << "\tLUI\tx" << dec << rd <<" , "<< hex << "0x" << (int)nzimm;
     regs[rd] = (int)nzimm;
     regs[rd] = regs[rd] << 12; //and sign extends bit 17 into all higher bits of the destination    ask about this 
     break;
@@ -513,15 +513,15 @@ extends bit 17 into all higher bits of the destination.C.LUI expands into lui rd
     switch (temp)
     {
     case 0:
-     cout << "\tSRLI\tx" << rd << ", x" << rd << hex<< "0x" << (int)nzimm << "\n";
+     cout << "\tSRLI\tx" << dec << rd << ", x" << dec << rd << hex<< "0x" << (int)nzimm << "\n";
      regs[rd] = (unsigned int)regs[rd] >> (int)nzimm;
      break;
     case 1:
-     cout << "\tSRAI\tx" << rd << ", x" << rd << hex << "0x" << (int)nzimm << "\n";
+     cout << "\tSRAI\tx" << dec << rd << ", x" <<  dec <<rd << hex << "0x" << (int)nzimm << "\n";
      regs[rd] = regs[rd] >> (int)nzimm;
      break;
     case 2:
-     cout << "\tANDI\tx" << rd << ", x" << rd << ", " << hex << "0x" << (int)nzimm << "\n";
+     cout << "\tANDI\tx" << dec << rd << ", x" << dec << rd << ", " << hex << "0x" << (int)nzimm << "\n";
      regs[rd] = regs[rd] & (int)nzimm;
      break;
     case 3:
@@ -531,23 +531,23 @@ extends bit 17 into all higher bits of the destination.C.LUI expands into lui rd
      {
 //C.SUB subtracts the value in register rs2′ from the value in register rd′, then writes the result to register rd′. C.SUB expands into sub rd′, rd′, rs2′
      case 0:
-      cout << "\tSUB\tx" << rd << ", x" << rd << ", x" << rs2 << "\n";
+      cout << "\tSUB\tx" << dec << rd << ", x" << dec << rd << ", x" << rs2 << "\n";
       regs[rd] = regs[rd] - regs[rs2];
       break;
 // XOR of the values in registers rd′ and rs2′, then writes the result to register rd′. C.XOR expands into xor rd′, rd′, rs2′.
      case 1:
-      cout << "\tXOR\tx" << rd << ", x" << rd << ", x" << rs2 << "\n";
+      cout << "\tXOR\tx" << dec << rd << ", x" << dec << rd << ", x" << rs2 << "\n";
       regs[rd] = regs[rd] ^ regs[rs2];
       break;
 // OR of the values in registers rd′ and rs2′, then writes the result to register rd′. C.OR expands into or rd′, rd′, rs2′.
      case 2:
-      cout << "\tOR\tx" << rd << ", x" << rd << ", x" << rs2 << "\n";
+      cout << "\tOR\tx" << dec << rd << ", x" << dec << rd << ", x" << rs2 << "\n";
       regs[rd] = regs[rd] | regs[rs2];
       break;
 
 //AND of the values in registers rd′ and rs2′, then writes the result to register rd′. C.AND expands into and rd′, rd′, rs2′.
      case 3:
-      cout << "\tAND\tx" << rd << ", x" << rd << ", x" << rs2 << "\n";
+      cout << "\tAND\tx" << dec << rd << ", x" << dec << rd << ", x" << rs2 << "\n";
       regs[rd] = regs[rd] & regs[rs2];
       break;
      }
@@ -562,14 +562,14 @@ extends bit 17 into all higher bits of the destination.C.LUI expands into lui rd
 //C.BEQZ takes the branch if the value in register rs1′ is zero. It expands to beq rs1′, x0, offset[8:1].
    case 6:
     rs1= ((instWord >> 7) & 0x0007);
-    cout << "\tBEQZ\tx" << rs1 << ",x0"  << hex << "0x" << (int)Bimm; 
+    cout << "\tBEQZ\tx" << dec << rs1 << ", x0"  << hex << "0x" << (int)Bimm; 
     if (regs[rs1] == 0)
      pc = pc + (int)Bimm * 2;
     break;
 //it takes the branch if rs1′ contains a nonzero value. It expands to bne rs1′, x0, offset[8:1].
    case 7:
     rs1 = ((instWord >> 7) & 0x0007);
-    cout << "\tBNEZ\tx" << rs1 << ",x0" << hex << "0x" << (int)Bimm;
+    cout << "\tBNEZ\tx" << dec <<  rs1 << ", x0" << hex << "0x" << (int)Bimm;
     if (regs[rs1] != 0)
      pc = pc + (int)Bimm * 2;
     break;
@@ -584,7 +584,7 @@ extends bit 17 into all higher bits of the destination.C.LUI expands into lui rd
 //C.SLLI is a CI-format instruction that performs a logical left shift of the value in register rd then writes the result to rd.
    case 0:
     rd = ((instWord >> 7) & 0x001F);
-    cout << "\tSLLI\tx" << rd << ", x" << rd << ", " << hex << "0x" << (int)nzimm << "\n";
+    cout << "\tSLLI\tx" << dec << rd << ", x" << dec << rd << ", " << hex << "0x" << (int)nzimm << "\n";
     regs[rd] = regs[rd] << (int)nzimm;
     break;
    case 4:
@@ -595,22 +595,23 @@ extends bit 17 into all higher bits of the destination.C.LUI expands into lui rd
     {
 //copies the value in register rs2 into register rd. C.MV expands into add rd, x0, rs2
     case 0:
-     cout << "\tMV\tx" << rd << ", x" << rs2 << "\n";
+     cout << "\tMV\tx" << dec << rd << ", x" <<  dec << rs2 << "\n";
      regs[rd] = regs[rs2] ;
      break;
 //C.ADD adds the values in registers rd and rs2 and writes the result to register rd. C.ADD expands into add rd, rd, rs2. C.ADD is only valid when rs2̸=x0; 
     case 1:
      if (rs2 != 0)
      {
-      cout << "\tADD\tx" << rd << ", x" << rd << ", x" << rs2 <<"\n";
+      cout << "\tADD\tx" << dec << rd << ", x" << dec << rd << ", x" << dec << rs2 <<"\n";
       regs[rd] = regs[rd] + regs[rs2];
      }
 //JALR (jump and link register) performs the same operation as C.JR, but additionally writes the address of the instruction following the jump (pc+2) to the link register, x1. C.JALR expands to jalr x1, 0(rs1). 
      else
      {
-      cout << "\tJALR\tx" << dec << rs2 << "\n";
-      regs[1] = pc + 4;
-      pc = regs[rd];
+        rs1 = ((instWord >> 7) & 0x001F);
+	    cout << "\tJALR\tx " << dec << rs1 << "\n";
+    	regs[1] = pc + 4;
+    	pc = regs[rs1];
      }
      break;
     }
