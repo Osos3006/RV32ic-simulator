@@ -20,7 +20,7 @@ unsigned int pc = 0x0;
 
 char memory[8 * 1024];	// only 8KB of memory located at address 0
 
-void emitError(char *s)
+void emitError(char*s)
 {
 	cout << s;
 	exit(0);
@@ -48,8 +48,16 @@ void instDecExec(unsigned int instWord)
 	// — inst[31] — inst[30:25] inst[24:21] inst[20]
 	I_imm = ((instWord >> 20) & 0x7FF) | (((instWord >> 31) ? 0xFFFFF800 : 0x0));
 
+
+
+	S_imm = ((funct7 << 7) | rd) | (((instWord >> 31) ? 0xFFFFF800 : 0x0));
+	U_imm = (instWord & 0xFFFFF000);
+	B_imm = ((rd & 0x1E)) | ((funct7 & 0x3F) << 5) | ((rd & 0x1) << 11) | (((instWord >> 31) ? 0xFFFFF000 : 0x0));
+	J_imm = ((instWord & 0x7FE00000) >> 20) | ((instWord >> 20 & 0x1) << 11) | ((instWord >> 12 & 0x7F) << 12)
+		| (((instWord >> 31) ? 0xFFF80000 : 0x0));
+
 	// concatenated the two immediate fields
-	unsigned int temp1 = ((instWord >> 25) & 0x3F);
+	/*unsigned int temp1 = ((instWord >> 25) & 0x3F);
 	unsigned int temp2 = ((instWord >> 7) & 0xF);
 	char str[100];
 	sprintf(str, "%d%d", temp2, temp1);
@@ -63,11 +71,11 @@ void instDecExec(unsigned int instWord)
 	B_imm = sprintf(str2, "%d%d", temp3, temp4);
 	B_imm = sprintf(str2, "%d%d", B_imm, temp5);
 	B_imm = sprintf(str2, "%d%d", B_imm, temp6);
-	B_imm = strtol(str2, NULL, 10);
+	B_imm = strtol(str2, NULL, 10);*/
 
-	U_imm = ((instWord >> 12) & 0x7FFF);
+	//U_imm = ((instWord >> 12) & 0x7FFF);
 
-	temp3 = ((instWord >> 21) & 0x3FF);
+	/*temp3 = ((instWord >> 21) & 0x3FF);
 	temp4 = ((instWord >> 20) & 0x1);
 	temp5 = ((instWord >> 12) & 0xFF);
 	temp6 = ((instWord >> 31) & 0x1);
@@ -75,7 +83,7 @@ void instDecExec(unsigned int instWord)
 	J_imm = sprintf(str3, "%d%d", temp3, temp4);
 	J_imm = sprintf(str3, "%d%d", B_imm, temp5);
 	J_imm = sprintf(str3, "%d%d", B_imm, temp6);
-	J_imm = strtol(str3, NULL, 10);
+	J_imm = strtol(str3, NULL, 10);*/
 
 
 	printPrefix(instPC, instWord);
@@ -306,12 +314,12 @@ void instDecExec(unsigned int instWord)
 			break;
 		case 6:
 			cout << "\tBLTU\tx" << rs1 << ", x" << rs2 << hex << "0x" << (int)B_imm;
-			if (unsigned int(regs[rs1]) < unsigned int(regs[rs2]))
+			if ((unsigned int)(regs[rs1]) < (unsigned int)(regs[rs2]))
 				pc = pc + (int)B_imm * 2;
 			break;
 		case 7:
 			cout << "\tBGEU\tx" << rs1 << ", x" << rs2 << hex << "0x" << (int)B_imm;
-			if (unsigned int(regs[rs1]) >= unsigned int(regs[rs2]))
+			if ((unsigned int)(regs[rs1]) >= (unsigned int)(regs[rs2]))
 				pc = pc + (int)B_imm * 2;
 			break;
 
@@ -408,7 +416,7 @@ int main(int argc, char *argv[]) {
 	ifstream inFile;
 	ofstream outFile;
 
-	if (argc<1) emitError("use: rv32i_sim <machine_code_file_name>\n");
+	if (argc < 1) emitError((char*)"use: rv32i_sim <machine_code_file_name>\n");
 
 	inFile.open(argv[1], ios::in | ios::binary | ios::ate);
 
@@ -417,7 +425,7 @@ int main(int argc, char *argv[]) {
 		int fsize = inFile.tellg();
 
 		inFile.seekg(0, inFile.beg);
-		if (!inFile.read((char *)memory, fsize)) emitError("Cannot read from input file\n");
+		if (!inFile.read((char*)memory, fsize)) emitError((char*)"Cannot read from input file\n");
 
 		while (true) {
 			instWord = (unsigned char)memory[pc] |
@@ -431,9 +439,9 @@ int main(int argc, char *argv[]) {
 		}
 
 		// dump the registers
-		for (int i = 0; i<32; i++)
+		for (int i = 0; i < 32; i++)
 			cout << "x" << dec << i << ": \t" << "0x" << hex << std::setfill('0') << std::setw(8) << regs[i] << "\n";
 
 	}
-	else emitError("Cannot access input file\n");
+	else emitError((char*)"Cannot access input file\n");
 }
