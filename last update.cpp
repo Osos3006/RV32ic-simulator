@@ -52,47 +52,47 @@ void instDecExec(unsigned int instWord)
 	U_imm = (instWord & 0xFFFFF000);
 
 
-	S_imm = (((instWord >> 20) & 0x7E0) | ((instWord >> 7) & 0x1F)) | ((instWord >> 31) ? 0xFFFFF800 : 0x0);
-
-	B_imm = ((instWord >> 7) & 0x1E) | ((instWord >> 20) & 0x7E0) | ((instWord << 4) & 0x800) | ((instWord >> 31) ? 0xFFFFF000 : 0x0);
-	J_imm = ((instWord & 0x7FE00000) >> 20) | ((instWord >> 9) & 0x800) | (instWord & 0xFF0000) | ((instWord >> 31) ? 0xFFF00000 : 0x0);
-
+	S_imm = ((( instWord >> 20) & 0x7E0) | ((instWord >> 7)& 0x1F)) | ((instWord >> 31) ? 0xFFFFF800 : 0x0);
+	
+	B_imm = ((instWord >> 7) & 0x1E) | ((instWord >> 20) & 0x7E0) | ((instWord << 4)  & 0x800) | ((instWord >> 31) ? 0xFFFFF000 : 0x0);
+	J_imm = ((instWord & 0x7FE00000) >> 20) | ((instWord >> 9 )& 0x800)  | (instWord & 0xFF0000)| ((instWord >> 31) ? 0xFFF00000 : 0x0);
 
 	 //concatenated the two immediate fields
-	//unsigned int temp1 = ((instWord >> 25) & 0x3F);
-	//unsigned int temp2 = ((instWord >> 7) & 0xF);
-	//char str[100];
-	//sprintf(str, "%d%d", temp2, temp1);
-	//S_imm = strtol(str, NULL, 10);
+	// unsigned int temp1 = ((instWord >> 25) & 0x3F);
+	// unsigned int temp2 = ((instWord >> 7) & 0xF);
+	// char str[100];
+	// sprintf(str, "%d%d", temp2, temp1);
+	// S_imm = strtol(str, NULL, 10);
 
-	//unsigned int temp3 = ((instWord >> 8) & 0x7);
-	//unsigned int temp4 = ((instWord >> 25) & 0x1F);
-	//unsigned int temp5 = ((instWord >> 7) & 0x1);
-	//unsigned int temp6 = ((instWord >> 30) & 0x1);
-	//char str2[100];
-	//B_imm = sprintf(str2, "%d%d", temp3, temp4);
-	//B_imm = sprintf(str2, "%d%d", B_imm, temp5);
-	//B_imm = sprintf(str2, "%d%d", B_imm, temp6);
-	//B_imm = strtol(str2, NULL, 10);
+	// unsigned int temp3 = ((instWord >> 8) & 0x7);
+	// unsigned int temp4 = ((instWord >> 25) & 0x1F);
+	// unsigned int temp5 = ((instWord >> 7) & 0x1);
+	// unsigned int temp6 = ((instWord >> 30) & 0x1);
+	// char str2[100];
+	// B_imm = sprintf(str2, "%d%d", temp3, temp4);
+	// B_imm = sprintf(str2, "%d%d", B_imm, temp5);
+	// B_imm = sprintf(str2, "%d%d", B_imm, temp6);
+	// B_imm = strtol(str2, NULL, 10);
 
-	//U_imm = ((instWord >> 12) & 0x7FFF);
+	// U_imm = ((instWord >> 12) & 0x7FFF);
 
-	//temp3 = ((instWord >> 21) & 0x3FF);
-	//temp4 = ((instWord >> 20) & 0x1);
-	//temp5 = ((instWord >> 12) & 0xFF);
-	//temp6 = ((instWord >> 31) & 0x1);
-	//char str3[100];
-	//J_imm = sprintf(str3, "%d%d", temp3, temp4);
-	//J_imm = sprintf(str3, "%d%d", B_imm, temp5);
-	//J_imm = sprintf(str3, "%d%d", B_imm, temp6);
-	//J_imm = strtol(str3, NULL, 10);
+	// temp3 = ((instWord >> 21) & 0x3FF);
+	// temp4 = ((instWord >> 20) & 0x1);
+	// temp5 = ((instWord >> 12) & 0xFF);
+	// temp6 = ((instWord >> 31) & 0x1);
+	// char str3[100];
+	// J_imm = sprintf(str3, "%d%d", temp3, temp4);
+	// J_imm = sprintf(str3, "%d%d", B_imm, temp5);
+	// J_imm = sprintf(str3, "%d%d", B_imm, temp6);
+	// J_imm = strtol(str3, NULL, 10);
 
 
 	printPrefix(instPC, instWord);
 
 	if (opcode == 0x33) {		// R Instructions
 		switch (funct3) {
-		case 0: if (funct7 == 32)
+		case 0: 
+		if (funct7 == 32)
 		{
 			cout << "\tSUB\tx" << rd << ", x" << rs1 << ", x" << rs2 << "\n";
 			regs[rd] = regs[rs1] - regs[rs2];
@@ -119,7 +119,7 @@ void instDecExec(unsigned int instWord)
 
 
 		case 3:
-			cout << "\tSLLU\tx" << rd << ", x" << rs1 << ", x" << rs2 << "\n";
+			cout << "\tSLTU\tx" << rd << ", x" << rs1 << ", x" << rs2 << "\n";
 			if ((unsigned int)regs[rs1] < (unsigned int)regs[rs2])
 				regs[rd] = 1;
 			else
@@ -141,7 +141,7 @@ void instDecExec(unsigned int instWord)
 			}
 			else
 			{
-				cout << "\tSRA\tx" << rd << ", x" << rs1 << ", x" << rs2 << "\n";
+				cout << "\tSRL\tx" << rd << ", x" << rs1 << ", x" << rs2 << "\n";
 				regs[rd] = (unsigned int)regs[rs1] >> regs[rs2];
 			}
 
@@ -295,32 +295,32 @@ void instDecExec(unsigned int instWord)
 		switch (funct3)
 		{
 		case 0:
-			cout << "\tBEQ\tx" << rs1 << ", x" << rs2 << hex << "0x" << (int)B_imm; // ask how to reach the word that should replace B-immediate
+			cout << "\tBEQ\tx" << rs1 << ", x" << rs2 << ", " << hex << "0x" << (int)B_imm << "\n";// ask how to reach the word that should replace B-immediate
 			if (regs[rs1] == regs[rs2])
 				pc = pc + (int)B_imm * 2;
 			break;
 		case 1:
-			cout << "\tBNE\tx" << rs1 << ", x" << rs2 << hex << "0x" << (int)B_imm;
+			cout << "\tBNE\tx" << rs1 << ", x" << rs2  << ", "<< hex << "0x" << (int)B_imm << "\n";
 			if (regs[rs1] != regs[rs2])
 				pc = pc + (int)B_imm * 2;
 			break;
 		case 4:
-			cout << "\tBLT\tx" << rs1 << ", x" << rs2 << hex << "0x" << (int)B_imm;
+			cout << "\tBLT\tx" << rs1 << ", x" << rs2  << ", "<< hex << "0x" << (int)B_imm << "\n";
 			if (regs[rs1] < regs[rs2])
 				pc = pc + (int)B_imm * 2;
 			break;
 		case 5:
-			cout << "\tBGE\tx" << rs1 << ", x" << rs2 << hex << "0x" << (int)B_imm;
+			cout << "\tBGE\tx" << rs1 << ", x" << rs2  << ", " << hex << "0x" << (int)B_imm << "\n";
 			if (regs[rs1] >= regs[rs2])
 				pc = pc + (int)B_imm * 2;
 			break;
 		case 6:
-			cout << "\tBLTU\tx" << rs1 << ", x" << rs2 << hex << "0x" << (int)B_imm;
+			cout << "\tBLTU\tx" << rs1 << ", x" << rs2  << ", "<< hex << "0x" << (int)B_imm << "\n";
 			if ((unsigned int)(regs[rs1]) < (unsigned int)(regs[rs2]))
 				pc = pc + (int)B_imm * 2;
 			break;
 		case 7:
-			cout << "\tBGEU\tx" << rs1 << ", x" << rs2 << hex << "0x" << (int)B_imm;
+			cout << "\tBGEU\tx" << rs1 << ", x" << rs2  << ", " << hex << "0x" << (int)B_imm << "\n";
 			if ((unsigned int)(regs[rs1]) >= (unsigned int)(regs[rs2]))
 				pc = pc + (int)B_imm * 2;
 			break;
@@ -356,7 +356,7 @@ void instDecExec(unsigned int instWord)
 		// J instructions
 	// JAL instruction:
 		{
-		cout << "\tJAL\tx" << rd << hex << "0x" << (int)J_imm;
+		cout << "\tJAL\tx" << rd << ", "<< hex << "0x" << (int)J_imm;
 		pc = pc + (int)J_imm * 2;
 
 		}
@@ -417,15 +417,15 @@ void instDecExec(unsigned int instWord)
 
 }
 
-int main() {
+int main(int argc, char* argv[]) {
 	unsigned int instWord = 0;
 	ifstream inFile;
-	inFile.open("div.bin");
+	//inFile.open("div.bin");
 	ofstream outFile;
 	unsigned int firstbytes = 0;
 
-	//if (argc < 1) emitError((char*)"use: rv32i_sim <machine_code_file_name>\n");
-	//inFile.open(argv[1], ios::in | ios::binary | ios::ate);
+	if (argc < 1) emitError((char*)"use: rv32i_sim <machine_code_file_name>\n");
+	inFile.open(argv[1], ios::in | ios::binary | ios::ate);
 	if (inFile.is_open())
 	{
 		int fsize = inFile.tellg();
@@ -462,7 +462,7 @@ int main() {
 			  (((unsigned char)memory[pc + 3]) << 24);
 			 pc += 4;
 			  //remove the following line once you have a complete simulator
-			// if (pc == 32) break;   // stop when PC reached address 32
+			 //if (pc == 64) break;   // stop when PC reached address 32
 			 instDecExec(instWord);
 			}
 			// dump the registers
@@ -472,7 +472,5 @@ int main() {
 	}
 	else
 		emitError((char*)"Cannot access input file\n");
-
-	system("pause");
 }
 
