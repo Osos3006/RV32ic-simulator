@@ -442,19 +442,22 @@ void instDecExec(unsigned int instWord)
 else
  {
   /*unsigned int rd, rs1, rs2, funct3, funct7, opcode;*/
+    instPC = pc - 2;
+  	printPrefix(instPC, instWord);
   unsigned int Uimm,immQ1,nzimm,Bimm, nzuimm , nzimm_addi16sp, imm, Jimm ;
-   instPC = pc - 2;
+ unsigned int add14imm ;
+  add14imm = ((((instWord >> 6) & 0x0001) | ((instWord >> 4) & 0x0002) | ((instWord >> 9) & 0x000c) | ((instWord >> 3) & 0x00f0)) << 2);
    unsigned int lwspimm, swspimm;
   lwspimm = ((((instWord >> 4) & 0x0007) | ((instWord >> 9) & 0x0008) | ((instWord << 2) & 0x0030) )<< 2);
   swspimm = ((((instWord >> 9) & 0x000f) | ((instWord >> 3) & 0x0030) )<< 2);
   Uimm = ( ((instWord & 0x1c000000) >> 7) |((instWord >> 1) & 0x0010) | ((instWord  & 0x0020) ? 0xc0 : 0x0)) ; // for load and store
 nzimm = ((instWord >> 2) & 0x001F) | (((instWord >> 12) & 1) ? 0xFFFFFFFE0 : 0); //immediate for ADDI set and for lui with ( << 12 )
 imm = ((instWord >> 2) & 0x001F) | (((instWord >> 12) & 1) ? 0xFFFFFFFE0 : 0); // immediate can be zero for ANDI , LI
-nzuimm = ((instWord >> 2) & 0x000F) | ((instWord >> 11) & 0); //immediate  for srli,srai,slli
+nzuimm = ((instWord >> 2) & 0x001F); //immediate  for srli,srai,slli
 //Andimm = ((instWord >> 2) & 0x001F) | (((instWord >> 12) & 1) ? 0xFFFFFFE0 : 0);
 nzimm_addi16sp = ((instWord >> 4) & 0x4) | ((instWord >> 2) & 0x8) | ((instWord >> 1) & 0x1c0) | ((instWord >> 7) & 0x30) | ((instWord >> 10 & 0x1) ? 0xFFFFFF80 : 0); //addi4spn
   Bimm = ((instWord >> 3) & 0x0003) | ((instWord >> 8) & 0x000C)|((instWord << 2) & 0x0010)|(instWord & 0x0060)|(((instWord >> 5) & 0x0080) ? 0xFFFFFF80 : 0);
-  Jimm = (instWord >> 2) & 0xE | (instWord >> 7) & 0x10 | (instWord << 3) & 0x20 | (instWord >> 1) & 0x340 | (instWord << 1 ) & 0x80 | (instWord << 2) & 0x400 | ((instWord >> 12 ) ? 0xFFFF800 : 0);
+  Jimm = (instWord >> 2) & 0xE | (instWord >> 7) & 0x10 | (instWord << 3) & 0x20 | (instWord >> 1) & 0x340 | (instWord << 1 ) & 0x80 | (instWord << 2) & 0x400 | ((instWord >> 12 ) ? 0xFFFFF800 : 0);
   
  
   opcode = instWord & 0x3;
@@ -464,6 +467,19 @@ nzimm_addi16sp = ((instWord >> 4) & 0x4) | ((instWord >> 2) & 0x8) | ((instWord 
   {
    switch (funct3)
    {
+
+       
+//adds a zero-extended non-zero immediate, scaled by 4, to the stack pointer, x2, and writes the result to rd′.  expands to addi rd′, x2, nzuimm[9:2]. C.ADDI4SPN is only valid when nzuimm̸=0; 
+
+
+   case 0: 
+    rd = ((instWord >> 2) & 0x0007);
+    if (add14imm != 0)
+    {
+     cout << "  ADDI4SPN  x" << rd << ", " << "(x2)" << ", " << hex << "0x" << (int)add14imm << endl;
+     regs[rd] = regs[2] + add14imm * 4;
+    }
+    break;
    case 2: //load word
     //regs[rd] = ((memory[regs[rs1] + (int)I_imm])) & 0x000000ff;                     
     rd = ((instWord >> 2) & 0x0007);
@@ -617,6 +633,7 @@ extends bit 17 into all higher bits of the destination.C.LUI expands into lui rd
   }
   else if (opcode==0x2)
   {
+       unsigned int quad2temp= ((instWord >> 12) & 0x0001);
    switch (funct3)
    {
 //C.SLLI is a CI-format instruction that performs a logical left shift of the value in register rd then writes the result to rd.
@@ -627,14 +644,25 @@ extends bit 17 into all higher bits of the destination.C.LUI expands into lui rd
     break;
    case 4:
     rd = ((instWord >> 7) & 0x001F);
-    unsigned int quad2temp= ((instWord >> 12) & 0x0001);
+   
     rs2 = ((instWord >> 2) & 0x001F);
     switch (quad2temp)
     {
 //copies the value in register rs2 into register rd. C.MV expands into add rd, x0, rs2
     case 0:
-     cout << "\tC.MV\tx" << dec << rd << ", x" <<  dec << rs2 << "\n";
-     regs[rd] = regs[rs2] ;
+     //C.JR (jump register) performs an unconditional control transfer to the address in register rs1. C.JR expands to jalr x0, 0(rs1). 
+  
+  if (rs2 == 0)
+  {
+   cout << "\tJR\tx" <<dec<< rs1 << "\n";
+   pc = regs[rs1];
+  }
+//copies the value in register rs2 into register rd. C.MV expands into add rd, x0, rs2
+  else
+  {
+   cout << "\tC.MV\tx" << dec << rd << ", x" << dec << rs2 << "\n";
+   regs[rd] = regs[rs2];
+  }
      break;
 //C.ADD adds the values in registers rd and rs2 and writes the result to register rd. C.ADD expands into add rd, rd, rs2. C.ADD is only valid when rs2̸=x0; 
     case 1:
