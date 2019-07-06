@@ -454,7 +454,7 @@ nzuimm = ((instWord >> 2) & 0x000F) | ((instWord >> 11) & 0); //immediate  for s
 //Andimm = ((instWord >> 2) & 0x001F) | (((instWord >> 12) & 1) ? 0xFFFFFFE0 : 0);
 nzimm_addi16sp = ((instWord >> 4) & 0x4) | ((instWord >> 2) & 0x8) | ((instWord >> 1) & 0x1c0) | ((instWord >> 7) & 0x30) | ((instWord >> 10 & 0x1) ? 0xFFFFFF80 : 0); //addi4spn
   Bimm = ((instWord >> 3) & 0x0003) | ((instWord >> 8) & 0x000C)|((instWord << 2) & 0x0010)|(instWord & 0x0060)|(((instWord >> 5) & 0x0080) ? 0xFFFFFF80 : 0);
-  Jimm = (instWord >> 2) & 0xE | (instWord >> 7) & 0x10 | (instWord << 3) & 0x20 | (instWord >> 1) & 0x340 | (instWord << 1 ) & 0x80 | (instWord << 2) & 0x400 | ((instWord >> 12 ) ? 0xFFFF1000 : 0);
+  Jimm = (instWord >> 2) & 0xE | (instWord >> 7) & 0x10 | (instWord << 3) & 0x20 | (instWord >> 1) & 0x340 | (instWord << 1 ) & 0x80 | (instWord << 2) & 0x400 | ((instWord >> 12 ) ? 0xFFFF800 : 0);
   
  
   opcode = instWord & 0x3;
