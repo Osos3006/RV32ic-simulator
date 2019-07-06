@@ -360,7 +360,7 @@ void instDecExec(unsigned int instWord)
 	else if (opcode == 0x17)
 	{
 			cout << "\tAUIPC\tx" << rd << " , " << hex << "0x" << ((int)U_imm >> 12) << endl;
-			regs[rd] = (U_imm + pc);
+			regs[rd] = (U_imm + (pc-4));
 			
 		
 	}
@@ -380,8 +380,8 @@ void instDecExec(unsigned int instWord)
 				//JALR instruction and it uses I-immediate
 			{
 				cout << "\tJALR\tx" << dec << rd << ", x" << rs1 << ", " << hex << "0x" << (int)I_imm << "\n";
-				regs[rd] = pc + 4;
-				pc = regs[rs1] + int(I_imm);
+				regs[rd] = pc ;
+				pc = (regs[rs1] + int(I_imm)) & 0xFFFFFFFE; //adds rs1 to immediate and sets rightmost bit 0
 			}
 
 	
@@ -457,8 +457,8 @@ nzuimm = ((instWord >> 2) & 0x001F); //immediate  for srli,srai,slli
 //Andimm = ((instWord >> 2) & 0x001F) | (((instWord >> 12) & 1) ? 0xFFFFFFE0 : 0);
 nzimm_addi16sp = ((instWord >> 4) & 0x4) | ((instWord >> 2) & 0x8) | ((instWord >> 1) & 0x1c0) | ((instWord >> 7) & 0x30) | ((instWord >> 10 & 0x1) ? 0xFFFFFF80 : 0); //addi4spn
   Bimm = ((instWord >> 3) & 0x0003) | ((instWord >> 8) & 0x000C)|((instWord << 2) & 0x0010)|(instWord & 0x0060)|(((instWord >> 5) & 0x0080) ? 0xFFFFFF80 : 0);
-  Jimm = (instWord >> 2) & 0xE | (instWord >> 7) & 0x10 | (instWord << 3) & 0x20 | (instWord >> 1) & 0x340 | (instWord << 1 ) & 0x80 | (instWord << 2) & 0x400 | ((instWord >> 12 ) ? 0xFFFFF800 : 0);
-  
+ // Jimm = (instWord >> 2) & 0xE | (instWord >> 7) & 0x10 | (instWord << 3) & 0x20 | (instWord >> 1) & 0x340 | (instWord << 1 ) & 0x80 | (instWord << 2) & 0x400 | ((instWord >> 12 ) ? 0xFFFFF800 : 0);
+  Jimm = ((instWord << 3) & 0x20) | ((instWord >> 2) & 0xE) | ((instWord << 1) & 0x80) | ((instWord >> 1) & 0x40) | ((instWord << 2) & 0x400) | ((instWord >> 1) & 0x300) | ((instWord >> 7) & 0x10) | (((instWord >> 12) & 0x1) ? 0xFFFFF800 : 0x0);
  
   opcode = instWord & 0x3;
   funct3 = ((instWord >> 13) & 0x0007);
@@ -472,14 +472,14 @@ nzimm_addi16sp = ((instWord >> 4) & 0x4) | ((instWord >> 2) & 0x8) | ((instWord 
 //adds a zero-extended non-zero immediate, scaled by 4, to the stack pointer, x2, and writes the result to rd′.  expands to addi rd′, x2, nzuimm[9:2]. C.ADDI4SPN is only valid when nzuimm̸=0; 
 
 
-   case 0: 
-    rd = ((instWord >> 2) & 0x0007);
-    if (add14imm != 0)
-    {
-     cout << "  ADDI4SPN  x" << rd << ", " << "(x2)" << ", " << hex << "0x" << (int)add14imm << endl;
-     regs[rd] = regs[2] + add14imm * 4;
-    }
-    break;
+//    case 0: 
+//     rd = ((instWord >> 2) & 0x0007);
+//     if (add14imm != 0)
+//     {
+//      cout << "  ADDI4SPN  x" << dec << rd << ", " << "(x2)" << ", " << hex << "0x" << (int)add14imm << endl;
+//      regs[rd] = regs[2] + (int)add14imm * 4;
+//     }
+//     break;
    case 2: //load word
     //regs[rd] = ((memory[regs[rs1] + (int)I_imm])) & 0x000000ff;                     
     rd = ((instWord >> 2) & 0x0007);
@@ -523,9 +523,9 @@ nzimm_addi16sp = ((instWord >> 4) & 0x4) | ((instWord >> 2) & 0x8) | ((instWord 
 //unconditional control transfer, writes the address of the instruction following the jump (pc+2) to the link register, x1. C.JAL expands to jal x1, offset[11:1]
    case 1:
     rd = ((instWord >> 7) & 0x001F);
-    cout << "\tC.JAL\tx" << dec << rd << hex << "0x" << (int)Jimm<<"\n";
-    pc = pc + (int)Jimm;
-   // regs[1] = pc;           // ask about it
+    cout << "\tC.JAL\t x1"  <<" , " <<hex << "0x" << (int)Jimm<<"\n";
+    regs[1] = pc ;  
+      pc += (int)Jimm - 2;         
     break;
 //C.LI loads the sign-extended 6-bit immediate, imm, into register rd. C.LI expands into addi rd, x0, imm[5:0]. C.LI is only valid when rd̸=x0
    case 2:
@@ -609,23 +609,23 @@ extends bit 17 into all higher bits of the destination.C.LUI expands into lui rd
     break;
 //C.J performs an unconditional control transfer. The offset is sign-extended and added to the pc to form the jump target address. C.J expands to jal x0, offset[11:1].
    case 5:
-    cout << "\tC.J\t" << hex << "0x" << (int)Jimm; 
-    regs[1]= 0 ;
-    pc = pc + (int)Jimm;
+    cout << "\tC.J\tx0\t" << hex << "0x" << (int)Jimm << "\n"; 
+    regs[0]= 0 ;
+    pc = (pc-2) + (int)Jimm;
     break;
 //C.BEQZ takes the branch if the value in register rs1′ is zero. It expands to beq rs1′, x0, offset[8:1].
    case 6:
     rs1= ((instWord >> 7) & 0x0007);
     cout << "\tC.BEQZ\tx" << dec << rs1 << ", x0"  << hex << "0x" << (int)Bimm; 
     if (regs[rs1] == 0)
-     pc = pc + (int)Bimm ;
+     pc = pc-2 + (int)Bimm ;
     break;
 //it takes the branch if rs1′ contains a nonzero value. It expands to bne rs1′, x0, offset[8:1].
    case 7:
     rs1 = ((instWord >> 7) & 0x0007);
     cout << "\tC.BNEZ\tx" << dec <<  rs1 << ", x0" << hex << "0x" << (int)Bimm;
     if (regs[rs1] != 0)
-     pc = pc + (int)Bimm ;
+     pc = pc-2 + (int)Bimm ;
     break;
    }
    
@@ -654,7 +654,9 @@ extends bit 17 into all higher bits of the destination.C.LUI expands into lui rd
   
   if (rs2 == 0)
   {
-   cout << "\tJR\tx" <<dec<< rs1 << "\n";
+    rs1 = ((instWord >> 7) & 0x001F);
+   cout << "\tC.JR\tx" <<dec<< rs1 << "\n";
+   regs[0]= pc;
    pc = regs[rs1];
   }
 //copies the value in register rs2 into register rd. C.MV expands into add rd, x0, rs2
@@ -675,8 +677,8 @@ extends bit 17 into all higher bits of the destination.C.LUI expands into lui rd
      else
      {
         rs1 = ((instWord >> 7) & 0x001F);
-	    cout << "\tC.JALR\tx " << dec << rs1 << "\n";
-    	regs[1] = pc + 2;
+	    cout << "\tC.JALR\tx1\t "  << dec << rs1 << "\n";
+    	regs[1] = pc ;
         if (rs1 != 0)
     	pc = regs[rs1];
         else
@@ -734,15 +736,17 @@ int main(int argc, char* argv[])
 					instWord = instWord | (((unsigned char)memory[pc + 2]) << 16) |
 						(((unsigned char)memory[pc + 3]) << 24);
                         compressed = false;
+                        	pc = pc + 4;
 					instDecExec(instWord);
-					pc = pc + 4;
+				
 
 				}
 				else
 				{
                     compressed = true;
+                    pc = pc + 2;
 					instDecExec(instWord);
-					pc = pc + 2;
+					
 					
 
 				}
